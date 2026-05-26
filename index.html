@@ -2,171 +2,264 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marvel Rivals Random Draft</title>
     <style>
-        body {
-            background-color: #0f0f0f;
-            margin: 0;
-            padding: 10px;
-            padding-bottom: 85px; 
-            font-family: 'Segoe UI', sans-serif;
-            color: white;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+        body { 
+            background-image: url('1358385.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #0f0f0f; 
+            
+            margin: 0; 
+            display: flex; 
+            height: 100vh; 
+            color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+            overflow: hidden; 
             box-sizing: border-box;
         }
 
-        .main-layout { display: flex; gap: 15px; flex-grow: 1; overflow: hidden; padding: 10px; }
-        
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(5, 1fr);
-            gap: 8px;
-            flex-grow: 1;
-            height: 100%;
+        /* Динамическая игровая зона */
+        #gameField { 
+            flex: 1; 
+            padding: 20px;
+            box-sizing: border-box;
+            align-items: center;
+            justify-content: center;
+            justify-items: center;
         }
 
-        .character-card {
-            background-color: #222;
-            border: 2px solid #444;
-            overflow: hidden;
-            cursor: pointer;
+        /* Контейнер слота */
+        .slot {
             position: relative;
-            transition: border 0.1s ease;
+            /* Жесткое соотношение сторон под вашу рамку 393х699 */
+            aspect-ratio: 393 / 699; 
+            transition: all 0.3s ease;
+            display: block;
         }
 
-        .character-card.selected { 
-            border: 4px solid #ff0000; 
-            box-shadow: 0 0 20px #ff0000;
-            z-index: 2;
+        /* Сама желтая рамка (лежит поверх портрета) */
+        .frame-img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 3; 
+            pointer-events: none;
+            object-fit: fill; 
         }
 
-        .character-card img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.8; }
-        .character-card.selected img { opacity: 1; }
-        
-        .control-panel {
-            width: 250px; 
-            padding: 20px; 
-            background-color: #1a1a1a;
-            border: 2px solid #333; 
+        /* Окно портрета с жесткой фиксацией краев и идеальной 4-точечной маской */
+        .portrait {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #000;
+            z-index: 1;
+            
+            /* Геометрическая маска по вашим точным координатам: (54,81), (346,69), (353,585), (55,640) */
+            clip-path: polygon(
+                13.7% 11.6%,   /* Левый верхний угол */
+                88.0% 9.9%,    /* Правый верхний угол */
+                89.8% 83.7%,   /* Правый нижний угол */
+                14.0% 91.6%    /* Левый нижний угол */
+            );
+        }
+
+        .portrait img {
+            width: 100%; 
+            height: 100%;
+            object-fit: cover;
+            object-position: center 15%; 
+            display: block;
+        }
+
+        /* Боковая панель управления */
+        .control-panel { 
+            width: 280px; 
+            background: rgba(22, 22, 22, 0.9); 
+            backdrop-filter: blur(5px); 
+            padding: 25px; 
+            border-left: 3px solid #222; 
             display: flex; 
-            flex-direction: column;
+            flex-direction: column; 
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 10;
         }
 
         .logo-container { 
             width: 130%; 
-            margin-bottom: 20px; 
-            margin-left: -15%; /* Смещение для центрирования при увеличении */
+            margin-bottom: 25px; 
+            margin-left: -15%; 
         }
-        .logo-container img { width: 100%; height: auto; }
-
-        .control-panel label { margin-bottom: 15px; font-weight: bold; color: #ff0000; display: block; }
-        .control-panel select { width: 100%; padding: 12px; margin-bottom: 20px; background: #000; color: white; border: 1px solid #ff0000; }
-        .control-panel button { width: 100%; padding: 15px; background: #ff0000; color: white; border: none; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
-        .control-panel button:hover { background: #b30000; }
+        .logo-container img { width: 100%; height: auto; display: block; }
+        
+        label { margin-top: 10px; color: #ff0000; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; }
+        select { 
+            width: 100%; padding: 12px; margin-top: 10px; 
+            background: #000; color: white; border: 1px solid #ff0000; 
+            font-size: 16px; font-weight: bold; text-align: center;
+        }
+        
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            margin-top: auto; 
+            background-color: #ff0000; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 18px;
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:hover { background-color: #b30000; }
+        button:active { transform: scale(0.98); }
+        button:disabled { background-color: #444; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
-    <div class="main-layout">
-        <div class="grid-container" id="grid">
-            <div class="character-card"><img src="Adam_Warlock_-_Adam_Warlock_Nameplate_Table_Icon.webp" alt="Adam Warlock"></div>
-            <div class="character-card"><img src="Angela_-_Angela_Nameplate_Table_Icon.webp" alt="Angela"></div>
-            <div class="character-card"><img src="Black_Cat_-_Black_Cat_Nameplate_Table_Icon.webp" alt="Black Cat"></div>
-            <div class="character-card"><img src="Black_Panther_-_Black_Panther_Nameplate_Table_Icon.webp" alt="Black Panther"></div>
-            <div class="character-card"><img src="Black_Widow_-_Black_Widow_Nameplate_Table_Icon.webp" alt="Black Widow"></div>
-            <div class="character-card"><img src="Blade_-_Blade_Nameplate_Table_Icon.webp" alt="Blade"></div>
-            <div class="character-card"><img src="Hulk_-_Hulk_Nameplate_Table_Icon.webp" alt="Hulk"></div>
-            <div class="character-card"><img src="Captain_America_-_Captain_America_Nameplate_Table_Icon.webp" alt="Captain America"></div>
-            <div class="character-card"><img src="Cloak_26_Dagger_Nameplate_Table_Icon.webp" alt="Cloak & Dagger"></div>
-            <div class="character-card"><img src="Daredevil_-_Daredevil_Nameplate_Table_Icon.webp" alt="Daredevil"></div>
-            <div class="character-card"><img src="Deadpool_-_Deadpool_Nameplate_Table_Icon.webp" alt="Deadpool"></div>
-            <div class="character-card"><img src="Devil_Dinosaur_-_Devil_Dinosaur_Nameplate_Table_Icon.webp" alt="Devil Dinosaur"></div>
-            <div class="character-card"><img src="Doctor_Strange_-_Doctor_Strange_Nameplate_Table_Icon.webp" alt="Doctor Strange"></div>
-            <div class="character-card"><img src="Elsa_Bloodstone_-_Elsa_Bloodstone_Nameplate_Table_Icon.webp" alt="Elsa Bloodstone"></div>
-            <div class="character-card"><img src="Emma_Frost_-_Emma_Frost_Nameplate_Table_Icon.webp" alt="Emma Frost"></div>
-            <div class="character-card"><img src="Gambit_-_Gambit_Nameplate_Table_Icon.webp" alt="Gambit"></div>
-            <div class="character-card"><img src="Groot_-_Groot_Nameplate_Table_Icon.webp" alt="Groot"></div>
-            <div class="character-card"><img src="Hawkeye_-_Hawkeye_Nameplate_Table_Icon.webp" alt="Hawkeye"></div>
-            <div class="character-card"><img src="Hela_-_Hela_Nameplate_Table_Icon.webp" alt="Hela"></div>
-            <div class="character-card"><img src="Human_Torch_-_Human_Torch_Nameplate_Table_Icon.webp" alt="Human Torch"></div>
-            <div class="character-card"><img src="Invisible_Woman_-_Invisible_Woman_Nameplate_Table_Icon.webp" alt="Invisible Woman"></div>
-            <div class="character-card"><img src="Iron_Fist_-_Iron_Fist_Nameplate_Table_Icon.webp" alt="Iron Fist"></div>
-            <div class="character-card"><img src="Iron_Man_-_Iron_Man_Nameplate_Table_Icon.webp" alt="Iron Man"></div>
-            <div class="character-card"><img src="Jeff_the_Land_Shark_-_Jeff_the_Land_Shark_Nameplate_Table_Icon.webp" alt="Jeff the Land Shark"></div>
-            <div class="character-card"><img src="Loki_-_Loki_Nameplate_Table_Icon.webp" alt="Loki"></div>
-            <div class="character-card"><img src="Luna_Snow_-_Luna_Snow_Nameplate_Table_Icon.webp" alt="Luna Snow"></div>
-            <div class="character-card"><img src="Magik_-_Magik_Nameplate_Table_Icon.webp" alt="Magik"></div>
-            <div class="character-card"><img src="Magneto_-_Magneto_Nameplate_Table_Icon.webp" alt="Magneto"></div>
-            <div class="character-card"><img src="Mantis_-_Mantis_Nameplate_Table_Icon.webp" alt="Mantis"></div>
-            <div class="character-card"><img src="Mister_Fantastic_-_Mister_Fantastic_Nameplate_Table_Icon.webp" alt="Mister Fantastic"></div>
-            <div class="character-card"><img src="Moon_Knight_-_Moon_Knight_Nameplate_Table_Icon.webp" alt="Moon Knight"></div>
-            <div class="character-card"><img src="Namor_-_Namor_Nameplate_Table_Icon.webp" alt="Namor"></div>
-            <div class="character-card"><img src="Peni_Parker_-_Peni_Parker_Nameplate_Table_Icon.webp" alt="Peni Parker"></div>
-            <div class="character-card"><img src="Phoenix_-_Phoenix_Nameplate_Table_Icon.webp" alt="Phoenix"></div>
-            <div class="character-card"><img src="Psylocke_-_Psylocke_Nameplate_Table_Icon.webp" alt="Psylocke"></div>
-            <div class="character-card"><img src="Rocket_Raccoon_-_Rocket_Raccoon_Nameplate_Table_Icon.webp" alt="Rocket Raccoon"></div>
-            <div class="character-card"><img src="Rogue_-_Rogue_Nameplate_Table_Icon.webp" alt="Rogue"></div>
-            <div class="character-card"><img src="Scarlet_Witch_-_Scarlet_Witch_Nameplate_Table_Icon.webp" alt="Scarlet Witch"></div>
-            <div class="character-card"><img src="Spider-Man_-_Spider-Man_Nameplate_Table_Icon.webp" alt="Spider-Man"></div>
-            <div class="character-card"><img src="Squirrel_Girl_-_Squirrel_Girl_Nameplate_Table_Icon.webp" alt="Squirrel Girl"></div>
-            <div class="character-card"><img src="Star-Lord_-_Star-Lord_Nameplate_Table_Icon.webp" alt="Star-Lord"></div>
-            <div class="character-card"><img src="Storm_-_Storm_Nameplate_Table_Icon.webp" alt="Storm"></div>
-            <div class="character-card"><img src="The_Punisher_-_The_Punisher_Nameplate_Table_Icon.webp" alt="The Punisher"></div>
-            <div class="character-card"><img src="The_Thing_-_The_Thing_Nameplate_Table_Icon.webp" alt="The Thing"></div>
-            <div class="character-card"><img src="Thor_-_Thor_Nameplate_Table_Icon.webp" alt="Thor"></div>
-            <div class="character-card"><img src="Ultron_-_Ultron_Nameplate_Table_Icon.webp" alt="Ultron"></div>
-            <div class="character-card"><img src="Venom_-_Venom_Nameplate_Table_Icon.webp" alt="Venom"></div>
-            <div class="character-card"><img src="White_Fox_-_White_Fox_Nameplate_Table_Icon.webp" alt="White Fox"></div>
-            <div class="character-card"><img src="Winter_Soldier_-_Winter_Soldier_Nameplate_Table_Icon.webp" alt="Winter Soldier"></div>
-            <div class="character-card"><img src="Wolverine_-_Wolverine_Nameplate_Table_Icon.webp" alt="Wolverine"></div>
-        </div>
+<div id="gameField"></div>
 
-        <div class="control-panel">
-            <div class="logo-container">
-                <img src="kling_20260526_Remove__4411_0-Photoroom.png" alt="Logo">
-            </div>
-            <label for="players">Количество игроков</label>
-            <select id="players">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-            </select>
-            <button id="startBtn">Start</button>
-        </div>
+<div class="control-panel">
+    <div class="logo-container">
+        <img src="kling_20260526_Remove__4411_0-Photoroom.png" alt="Logo">
     </div>
+    <label>Количество игроков</label>
+    <select id="players">
+        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+    </select>
+    <button id="startBtn">START</button>
+</div>
 
-    <script>
-        const cards = Array.from(document.querySelectorAll('.character-card'));
-        const playerSelect = document.getElementById('players');
-        const startBtn = document.getElementById('startBtn');
+<script>
+    const heroes = [
+        "img_adam-warlock.png", "img_angela.png", "img_black-cat.png", "img_black-panther.png",
+        "img_black-widow.png", "img_blade.png", "img_bruce-banner.png", "img_captain-america.png",
+        "img_cloak-dagger.png", "img_daredevil.png", "img_deadpool.png", "img_devil-dinosaur.png",
+        "img_doctor-strange.png", "img_elsa-bloodstone.png", "img_emma-frost.png", "img_gambit.png",
+        "img_groot.png", "img_hawkeye.png", "img_hela.png", "img_human-torch.png",
+        "img_invisible-woman.png", "img_iron-fist.png", "img_iron-man.png", "img_jeff-the-land-shark.png",
+        "img_loki.png", "img_luna-snow.png", "img_magik.png", "img_magneto.png",
+        "img_mantis.png", "img_mister-fantastic.png", "img_moon-knight.png", "img_namor.png",
+        "img_peni-parker.png", "img_phoenix.png", "img_psylocke.png", "img_rocket-raccoon.png",
+        "img_rogue.png", "img_scarlet-witch.png", "img_spider-man.png", "img_squirrel-girl.png",
+        "img_star-lord.png", "img_storm.png", "img_punisher.png", "img_the-thing.png",
+        "img_thor.png", "img_ultron.png", "img_venom.png", "img_white-fox.png",
+        "img_winter-soldier.png", "img_wolverine.png"
+    ];
 
-        startBtn.addEventListener('click', () => {
-            const count = parseInt(playerSelect.value);
-            let delay = 50; 
-            let elapsed = 0;
-            const totalDuration = 3000; 
+    const gameField = document.getElementById('gameField');
+    const playerSelect = document.getElementById('players');
+    const startBtn = document.getElementById('startBtn');
 
-            function runAnimation() {
-                cards.forEach(c => c.classList.remove('selected'));
-                
-                let shuffled = [...cards.keys()].sort(() => 0.5 - Math.random());
-                let selectedIndices = shuffled.slice(0, count);
-                
-                selectedIndices.forEach(i => cards[i].classList.add('selected'));
+    function renderSlots() {
+        gameField.innerHTML = '';
+        const count = parseInt(playerSelect.value);
+        
+        let slotHeight;
+        let gap;
 
-                elapsed += delay;
-                if (elapsed > 2000) { delay += 50; }
+        if (count === 1) {
+            slotHeight = "95vh";   
+            gap = "30px";
+            gameField.style.display = 'flex';
+            gameField.style.flexDirection = 'row';
+        } else if (count === 2) {
+            slotHeight = "91vh";   
+            gap = "25px";
+            gameField.style.display = 'flex';
+            gameField.style.flexDirection = 'row';
+        } else if (count === 3) {
+            slotHeight = "84.5vh"; 
+            gap = "20px";
+            gameField.style.display = 'flex';
+            gameField.style.flexDirection = 'row';
+        } else if (count === 4) {
+            slotHeight = "70.2vh"; 
+            gap = "15px";
+            gameField.style.display = 'flex';
+            gameField.style.flexDirection = 'row';
+        } else if (count === 5) {
+            slotHeight = "51.7vh";   
+            gap = "10px";
+            gameField.style.display = 'flex';
+            gameField.style.flexDirection = 'row';
+        } else if (count === 6) {
+            slotHeight = "49.4vh"; 
+            gap = "15px";
+            gameField.style.display = 'grid';
+            gameField.style.gridTemplateColumns = 'repeat(3, auto)';
+        }
 
-                if (elapsed < totalDuration) {
-                    setTimeout(runAnimation, delay);
-                }
+        gameField.style.gap = gap;
+
+        for (let i = 0; i < count; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'slot';
+            slot.style.height = slotHeight;
+            slot.innerHTML = `
+                <img src="image-Photoroom.png" class="frame-img">
+                <div class="portrait">
+                    <img src="${heroes[Math.floor(Math.random() * heroes.length)]}" class="spin">
+                </div>
+            `;
+            gameField.appendChild(slot);
+        }
+    }
+
+    playerSelect.onchange = renderSlots;
+    window.onload = renderSlots;
+
+    startBtn.onclick = () => {
+        const imgs = document.querySelectorAll('.spin');
+        if (imgs.length === 0) return;
+
+        startBtn.disabled = true;
+        playerSelect.disabled = true;
+
+        let elapsed = 0;
+        let delay = 50; 
+        const totalDuration = 2000; // Время уменьшено до 2 секунд
+
+        // Перемешиваем и выбираем строго уникальных персонажей
+        let finalHeroes = [...heroes].sort(() => 0.5 - Math.random()).slice(0, imgs.length);
+
+        function runSpin() {
+            // Если время вышло — принудительно ставим уникальных и выходим
+            if (elapsed >= totalDuration) {
+                imgs.forEach((img, index) => {
+                    img.src = finalHeroes[index];
+                });
+                startBtn.disabled = false;
+                playerSelect.disabled = false;
+                return;
             }
-            runAnimation();
-        });
-    </script>
+
+            // Пока крутится — показываем случайный хаос
+            imgs.forEach((img) => {
+                img.src = heroes[Math.floor(Math.random() * heroes.length)];
+            });
+
+            elapsed += delay;
+
+            // Замедление начинается после 1.2 секунды (1200мс)
+            if (elapsed > 1200) {
+                delay += 35; 
+            }
+
+            setTimeout(runSpin, delay);
+        }
+
+        runSpin();
+    };
+</script>
 </body>
 </html>
